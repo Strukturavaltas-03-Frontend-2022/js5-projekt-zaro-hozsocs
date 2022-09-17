@@ -1,7 +1,11 @@
 /* eslint-disable guard-for-in */
 /* eslint-disable no-restricted-syntax */
+
+let isediting = false;
+// Kulcsok az adatok bejárásához
 const keys = ['id', 'name', 'emailAdress', 'adress'];
 
+// Adatok beolvasása a szerverről
 const getServerData = (url) => {
   const fetchOptions = {
     method: 'GET',
@@ -18,13 +22,17 @@ const getServerData = (url) => {
 // Sorok törlése
 const deleteRow = (btn) => {
   const tr = btn.parentElement.parentElement.parentElement;
-  const id = tr.querySelector('td:first-child').innerHTML;
+  const input = tr.querySelector('input:first-child');
+  input.setAttribute('readonly', 'false');
+
+  const id = input.innerHTML;
   const fetchOptions = {
     method: 'DELETE',
     mode: 'cors',
     cache: 'no-cache',
   };
-  fetch(`http://localhost:3000/users/${id}`, fetchOptions).then(
+
+  fetch(`http://localhost:3000/users/${getRowData(tr).id}`, fetchOptions).then(
     (resp) => resp.json(),
     (err) => console.error(err),
   ).then(
@@ -34,7 +42,7 @@ const deleteRow = (btn) => {
   );
 };
 
-// Sorok hozzáadása:
+// Azon adatok összegyűjtése amivel műveleteket végzünk
 const getRowData = (tr) => {
   const inputs = tr.querySelectorAll('input');
   const data = {};
@@ -44,29 +52,46 @@ const getRowData = (tr) => {
   return data;
 };
 
+// Sorok hozzáadása:
 const addRow = (btn) => {
   const tr = btn.parentElement.parentElement;
   const data = getRowData(tr);
   delete data.id;
 
-  const fetchOptions = {
-    method: 'POST',
-    mode: 'cors',
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  };
+  let wrongvalidate = false;
 
-  fetch('http://localhost:3000/users', fetchOptions).then(
-    (resp) => resp.json(),
-    (err) => console.error(err),
-  ).then(
-    (data) => {
-      refreshData();
-    },
-  );
+  for (const k of ['name', 'emailAdress', 'adress']) {
+    if (validate(data[k], k)) {
+      alert(`A ${k} validating is ok`);
+
+      // setTimeout(ablak, 5000);
+    } else {
+      setTimeout(() => alert(`A ${k} validating is wrong`), 5000);
+      wrongvalidate = true;
+      break;
+    }
+    console.log(wrongvalidate);
+  }
+  if (wrongvalidate === false) {
+    const fetchOptions = {
+      method: 'POST',
+      mode: 'cors',
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    };
+
+    fetch('http://localhost:3000/users', fetchOptions).then(
+      (resp) => resp.json(),
+      (err) => console.error(err),
+    ).then(
+      (data) => {
+        refreshData();
+      },
+    );
+  }
 };
 
 // Sorok hozzáadása: hely előkészítése
@@ -90,44 +115,112 @@ const newUserRow = () => {
 
   return tr;
 };
+
 // Sorok frissítése
 const refreshRow = (btn) => {
   const tr = btn.parentElement.parentElement.parentElement;
   const data = getRowData(tr);
 
-  const fetchOptions = {
-    method: 'PUT',
-    mode: 'cors',
-    cache: 'no-cache',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  };
+  let wrongvalidate = false;
 
-  fetch(`http://localhost:3000/users/${data.id}`, fetchOptions).then(
-    (resp) => resp.json(),
-    (err) => console.error(err),
-  ).then(
-    (data) => {
-      refreshData();
-    },
-  );
-};
-// Sorok .....
-const anyRow = (em) => {
-  console.log(em);
+  for (const k of ['name', 'emailAdress', 'adress']) {
+    if (validate(data[k], k)) {
+      alert(`A ${k} validating is ok`);
+
+      // setTimeout(ablak, 5000);
+    } else {
+      setTimeout(() => alert(`A ${k} validating is wrong`), 5000);
+      wrongvalidate = true;
+      break;
+    }
+    console.log(wrongvalidate);
+  }
+  if (wrongvalidate === false) {
+    const fetchOptions = {
+      method: 'PUT',
+      mode: 'cors',
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    };
+
+    fetch(`http://localhost:3000/users/${data.id}`, fetchOptions).then(
+      (resp) => resp.json(),
+      (err) => console.error(err),
+    ).then(
+      (data) => {
+        isediting = false;
+        refreshData();
+      },
+    );
+  }
 };
 
-const createBtnGroup = () => {
-  const teszt1 = 'hello1';
+// Validálás
+
+const roles = {
+  name: /^[A-ZÁÉÍÓÚÖŐÜŰ]{1}[a-záéíóúöőüű\'\-]{1,20} [A-ZÁÉÍÓÚÖŐÜŰ]{1}[a-záéíóúöőüű\-]{0,18}(\'[A-ZÁÉÍÓÚÖŐÜŰ]{1}[a-záéíóúöőüű\-]{1,18}|[a-záéíóúöőüű\-]{1,20}|\-[A-ZÁÉÍÓÚÖŐÜŰ]{1}[a-záéíóúöőüű\-]{1,18})$/,
+  emailAdress: /^[a-zA-Z][a-zA-Z0-9\.\-\_]+@[a-zA-Z0-9\.\-\_]+\.[a-zA-Z]{2,6}/,
+  adress: /^[0-9]{1,10} [a-zA-Z0-9\.\-\_ ]*$/,
+};
+
+const validate = (text, type) => roles[type].test(text);
+
+// egy sor újraépítése, szerkeszthetővé tétel
+const filldatarow = (tr, data) => {
+  tr.innerHTML = '';
+  for (const k of keys) {
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.value = data[k];
+    input.setAttribute('name', k);
+    if (k === 'id') input.setAttribute('readonly', 'false');
+    td.appendChild(input);
+    tr.appendChild(td);
+  }
+  const btnGroup = createBtnGroup('Save', 'Cancel');
+  tr.appendChild(btnGroup);
+
+  return tr;
+};
+
+// Sorok szerkeszthetőek lesznek
+const makeRowEditable = (btn) => {
+  isediting = true;
+  const tr = btn.parentElement.parentElement.parentElement;
+  const data = getRowData(tr);
+
+  return filldatarow(tr, data);
+};
+
+// kattintás a gombokon
+const firstBtnClick = (btn) => {
+  if ((btn.innerHTML === 'Edit') && (isediting === false)) makeRowEditable(btn);
+  else if ((btn.innerHTML === 'Edit') && (isediting === true)) alert('Please, finish your actual editing first.');
+  else refreshRow(btn);
+};
+
+const secondBtnClick = (btn) => {
+  if ((btn.innerHTML === 'Remove') && (isediting === false)) deleteRow(btn);
+  else if ((btn.innerHTML === 'Remove') && (isediting === true)) alert('Please, finish your actual editing first.');
+  else {
+    refreshData();
+  }
+};
+
+// Gombok létrehozása
+const createBtnGroup = (firstvalue, secondvalue) => {
   const divgroup = document.createElement('div');
   const editBtn = document.createElement('button');
-  editBtn.innerHTML = 'Edit';
-  editBtn.onclick = function () { refreshRow(this); };
+  editBtn.innerHTML = firstvalue;
+  editBtn.onclick = function () {
+    firstBtnClick(this);
+  };
   const delBtn = document.createElement('button');
-  delBtn.innerHTML = 'Delete';
-  delBtn.onclick = function () { deleteRow(this); };
+  delBtn.innerHTML = secondvalue;
+  delBtn.onclick = function () { secondBtnClick(this); };
   const btnTd = document.createElement('td');
   divgroup.appendChild(editBtn);
   divgroup.appendChild(delBtn);
@@ -136,6 +229,7 @@ const createBtnGroup = () => {
   return btnTd;
 };
 
+// Táblázat kitöltése adatokkal
 const filldatatable = (data) => {
   const table = document.querySelector('#tbody');
   table.innerHTML = '';
@@ -149,16 +243,17 @@ const filldatatable = (data) => {
       const input = document.createElement('input');
       input.value = row[k];
       input.setAttribute('name', k);
-      if (k === 'id') { input.setAttribute('readonly', 'true'); }
+      input.setAttribute('readonly', 'true');
       td.appendChild(input);
       tr.appendChild(td);
     }
-    const btnGroup = createBtnGroup();
+    const btnGroup = createBtnGroup('Edit', 'Remove');
     tr.appendChild(btnGroup);
     table.appendChild(tr);
   }
 };
 
+// Adatok frissítése, újra beolvasása
 const refreshData = () => {
   getServerData('http://localhost:3000/users').then(
     (data) => filldatatable(data),
