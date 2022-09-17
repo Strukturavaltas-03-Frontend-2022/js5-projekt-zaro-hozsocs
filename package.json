@@ -1,0 +1,25 @@
+{
+  "name": "js5-projekt-zaro-hozsocs",
+  "version": "1.0.0",
+  "description": "Feladatod egy CRUD-alkalmazás elkészítése! Az alkalmazás egy JSON-fájlt használ adatforrásként, amely 100 felhasználó adatait (id, name, emailAddress, address) tartalmazza.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Strukturavaltas-03-Frontend-2022/js5-projekt-zaro-hozsocs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Strukturavaltas-03-Frontend-2022/js5-projekt-zaro-hozsocs/issues"
+  },
+  "homepage": "https://github.com/Strukturavaltas-03-Frontend-2022/js5-projekt-zaro-hozsocs#readme",
+  "devDependencies": {
+    "eslint": "^8.23.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0"
+  }
+}
