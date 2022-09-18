@@ -4,6 +4,7 @@
 let isediting = false;
 // Kulcsok az adatok bejárásához
 const keys = ['id', 'name', 'emailAdress', 'adress'];
+const messageBox = document.querySelector('#container');
 
 // Adatok beolvasása a szerverről
 const getServerData = (url) => {
@@ -59,19 +60,8 @@ const addRow = (btn) => {
   delete data.id;
 
   let wrongvalidate = false;
+  wrongvalidate = validate(data, wrongvalidate);
 
-  for (const k of ['name', 'emailAdress', 'adress']) {
-    if (validate(data[k], k)) {
-      alert(`A ${k} validating is ok`);
-
-      // setTimeout(ablak, 5000);
-    } else {
-      setTimeout(() => alert(`A ${k} validating is wrong`), 5000);
-      wrongvalidate = true;
-      break;
-    }
-    console.log(wrongvalidate);
-  }
   if (wrongvalidate === false) {
     const fetchOptions = {
       method: 'POST',
@@ -93,6 +83,7 @@ const addRow = (btn) => {
     );
   }
 };
+// };
 
 // Sorok hozzáadása: hely előkészítése
 const newUserRow = () => {
@@ -123,18 +114,8 @@ const refreshRow = (btn) => {
 
   let wrongvalidate = false;
 
-  for (const k of ['name', 'emailAdress', 'adress']) {
-    if (validate(data[k], k)) {
-      alert(`A ${k} validating is ok`);
+  wrongvalidate = validate(data, wrongvalidate);
 
-      // setTimeout(ablak, 5000);
-    } else {
-      setTimeout(() => alert(`A ${k} validating is wrong`), 5000);
-      wrongvalidate = true;
-      break;
-    }
-    console.log(wrongvalidate);
-  }
   if (wrongvalidate === false) {
     const fetchOptions = {
       method: 'PUT',
@@ -166,7 +147,47 @@ const roles = {
   adress: /^[0-9]{1,10} [a-zA-Z0-9\.\-\_ ]*$/,
 };
 
-const validate = (text, type) => roles[type].test(text);
+const alertBoxWrong = (k, vh) => {
+  const box = document.createElement('div');
+  box.innerHTML = `A ${k} validating is wrong`;
+  box.setAttribute('style', `background-color:red; bottom: ${vh}vh;`);
+  box.setAttribute('class', 'message');
+  messageBox.appendChild(box);
+  setTimeout(() => { messageBox.removeChild(box); }, 5000);
+};
+
+const alertBoxGood = (k, vh) => {
+  const box = document.createElement('div');
+  box.innerHTML = `A ${k} validating is ok`;
+  box.setAttribute('style', `background-color:green; bottom: ${vh}vh;`);
+  box.setAttribute('class', 'message');
+  messageBox.appendChild(box);
+  setTimeout(() => { messageBox.removeChild(box); }, 5000);
+};
+const alertBoxDuplcatedEditing = () => {
+  const box = document.createElement('div');
+  box.innerHTML = 'Please, finish your actual editing first.';
+  box.setAttribute('style', 'background-color:red; bottom: 50vh;');
+  box.setAttribute('class', 'message');
+
+  messageBox.appendChild(box);
+  setTimeout(() => { messageBox.removeChild(box); }, 5000);
+};
+
+const validate = (data, wrongvalidate) => {
+  let i = 1;
+  for (const k of ['name', 'emailAdress', 'adress']) {
+    if (roles[k].test(data[k])) alertBoxGood(k, (40 + i * 10));
+    else {
+      alertBoxWrong(k, (40 + i * 20));
+      wrongvalidate = true;
+      break;
+    }
+    i += 1;
+  }
+  messageBox.setAttribute('display', 'none');
+  return wrongvalidate;
+};
 
 // egy sor újraépítése, szerkeszthetővé tétel
 const filldatarow = (tr, data) => {
@@ -176,7 +197,7 @@ const filldatarow = (tr, data) => {
     const input = document.createElement('input');
     input.value = data[k];
     input.setAttribute('name', k);
-    if (k === 'id') input.setAttribute('readonly', 'false');
+    if (k === 'id') input.setAttribute('readonly', 'true');
     td.appendChild(input);
     tr.appendChild(td);
   }
@@ -198,14 +219,20 @@ const makeRowEditable = (btn) => {
 // kattintás a gombokon
 const firstBtnClick = (btn) => {
   if ((btn.innerHTML === 'Edit') && (isediting === false)) makeRowEditable(btn);
-  else if ((btn.innerHTML === 'Edit') && (isediting === true)) alert('Please, finish your actual editing first.');
-  else refreshRow(btn);
+  else if ((btn.innerHTML === 'Edit') && (isediting === true)) {
+    messageBox.setAttribute('display', 'box');
+    alertBoxDuplcatedEditing();
+    messageBox.setAttribute('display', 'none');
+  } else refreshRow(btn);
 };
 
 const secondBtnClick = (btn) => {
   if ((btn.innerHTML === 'Remove') && (isediting === false)) deleteRow(btn);
-  else if ((btn.innerHTML === 'Remove') && (isediting === true)) alert('Please, finish your actual editing first.');
-  else {
+  else if ((btn.innerHTML === 'Remove') && (isediting === true)) {
+    messageBox.setAttribute('display', 'box');
+    alertBoxDuplcatedEditing();
+    messageBox.setAttribute('display', 'none');
+  } else {
     refreshData();
   }
 };
